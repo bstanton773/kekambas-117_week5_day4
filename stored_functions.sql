@@ -75,3 +75,63 @@ $$;
 SELECT employee_with_most_transactions();
 
 
+-- Create a function that will return a table with customer info (first and last name)
+-- and full address (address, city, district, country) by country name
+
+
+SELECT c.first_name, c.last_name, a.address, ci.city, a.district, co.country
+FROM customer c
+JOIN address a
+ON c.address_id = a.address_id
+JOIN city ci
+ON ci.city_id = a.city_id
+JOIN country co 
+ON co.country_id = ci.country_id
+WHERE country = 'India';
+
+
+CREATE OR REPLACE FUNCTION customers_in_country(country_name VARCHAR)
+RETURNS TABLE (
+	first_name VARCHAR(45),
+	last_name VARCHAR(45),
+	address VARCHAR(50),
+	city VARCHAR(50),
+	district VARCHAR(20),
+	country VARCHAR(50)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+	RETURN QUERY
+	SELECT c.first_name, c.last_name, a.address, ci.city, a.district, co.country
+	FROM customer c
+	JOIN address a
+	ON c.address_id = a.address_id
+	JOIN city ci
+	ON ci.city_id = a.city_id
+	JOIN country co 
+	ON co.country_id = ci.country_id
+	WHERE co.country = country_name;
+END;
+$$;
+
+-- Execute a function that returns a table - use SELECT ... FROM
+SELECT *
+FROM customers_in_country('India');
+
+SELECT *
+FROM customers_in_country('Mexico');
+
+SELECT *
+FROM customers_in_country('United States')
+WHERE district = 'Illinois';
+
+
+SELECT district, COUNT(*)
+FROM customers_in_country('India')
+GROUP BY district
+ORDER BY COUNT(*) DESC;
+
+
+-- To delete a function, use DROP
+DROP FUNCTION IF EXISTS employee_with_most_transactions;
